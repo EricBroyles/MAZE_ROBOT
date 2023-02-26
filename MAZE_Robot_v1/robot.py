@@ -1,23 +1,37 @@
 from time import time
+import lib.brickpi3 as BP
+import lib.grovepi as GROVE
+from helpers import initSensorDelay
 
-
-##all constants infor about the robot, ie port nums, and diameters of wheels is stored in constants
-
-##any info about the motor stored here should be dynamic ie the current encoder reading
 
 class Robot:
 
-
- #will also store the 
-    #initializ basic info about the robot
-    #wheels -> name, motor: {port}
-    #need wheel diameter
-    #need motor info: name, should it be inversed, port, wheel diameter
-
-    ##need to store the encoder reading, the reading from any sensors
-
-
     def __init__(self):
+
+        ##GROVE INSTANCE
+        self.grove = GROVE
+
+        ##LEGO INSTANCE
+        LEGO = BP.BrickPi3()
+        self.lego = LEGO
+
+        ##ROBOT STRUCT
+        """
+            list of dicts, where each dict is a component of the robot ie a motor
+            type: motor, ultrasonic, ir
+            loc: location on robot ie front_left
+            port: 
+            wheel_dia: diameter of the wheel in meters
+            init_delay: for select sensors that will read invalid if not given time to config
+        """
+        ROBOT = [
+            {"type": "motor", "loc": "left", "port": LEGO.Port_A, "wheel_dia": 10, "init_delay": False},
+            {"type": "motor", "loc": "right", "port": LEGO.Port_D, "wheel_dia": 10, "init_delay": False},
+            {"type": "gyroscope", "loc": "any", "port": LEGO.Port_1, "sensor_type": LEGO.SENSOR_TYPE.EV3_GYRO_ABS, "init_delay": True},
+            {"type": "ultrasonic", "loc": "left", "port": 4, "init_delay": False},
+            {"type": "ultrasonic", "loc": "front", "port": 8, "init_delay": False},
+            {"type": "ultrasonic", "loc": "right", "port": 7, "init_delay": False},
+        ]
 
         ##TIME DATA
         """
@@ -51,27 +65,57 @@ class Robot:
         
 
     def __str__(self):
-        return f""
+        return f"myRobot -> {self.time - self.baseTime}: "
+    
+
+    """
+    Actions:
+    motor -> reset the motor encoder
+    gyroscope -> set sensor type, perform delay until reading values
+
+    """
+    def initRobot(self):
+
+        for item in self.ROBOT:
+            if "motor" in item.keys():
+                amount = self.lego.get_motor_encoder(item["port"])
+                self.lego.offset_motor_encoder(item["port"], amount)
+            elif "gyroscope" in item.keys():
+                self.lego.set_sensor_type(item["port"], item["sensor_type"])
+
+                ###NEED TO FINISH
+                initSensorDelay()
+        
 
     def updateTime(self):
-        self.time += 1
+        self.time = time.time()
+
+    """
+    returns the time that has passed from start in ms
+    """
+    def getTime(self):
+        return (self.time - self.baseTime)
 
     def updatePosition(self):
-        self.position += 1
+        pass
+
+
+    """
+    generic function to read any sensor or encoder on the robot
+
+    when loc is unspecified, and their are multiples of the same type all will be returned
+    """
+    def readData(type, loc = None):
+
+
+    
 
 
 
         
 
-##ROBOT STRUCT
-"""
-    list of dicts, where each dict is a component of the robot ie a motor
 
-    {"motor_front_left": 0, "motor_front_right": 0, "motor_back_left": 0, "motor_back_right": 0}
-"""
-ROBOT = [
-    {"name": "motor_front_left", "type": "motor", "location": "front_left", "port": "", "init_type": None, "pin_mode": None, "data_type": },
-]
+
 
 
 
