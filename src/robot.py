@@ -1,7 +1,8 @@
 from time import time
+import constants
 import lib.brickpi3 as BP
 import lib.grovepi as GROVE
-from helpers import initSensorDelay
+from inputs.clean import initSensorDelay
 
 
 class Robot:
@@ -82,9 +83,7 @@ class Robot:
                 self.lego.offset_motor_encoder(item["port"], amount)
             elif "gyroscope" in item.keys():
                 self.lego.set_sensor_type(item["port"], item["sensor_type"])
-
-                ###NEED TO FINISH
-                initSensorDelay()
+                initSensorDelay(item["type"], item["loc"])
         
 
     def updateTime(self):
@@ -106,7 +105,7 @@ class Robot:
     when loc is unspecified, and their are multiples of the same type all will be returned
     """
     def readData(type, loc = None):
-
+        pass
 
     
 

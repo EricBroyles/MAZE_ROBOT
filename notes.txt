@@ -1,0 +1,3 @@
+moving needs to consider the gyroscope if getting of track
+
+need to be able to clean binary data in clean
