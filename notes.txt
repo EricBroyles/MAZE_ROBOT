@@ -1,3 +1,9 @@
 moving needs to consider the gyroscope if getting of track
 
 need to be able to clean binary data in clean
+
+
+
+
+
+QUESTION: DOES THE EV3_GYRO_ABS just get larger as u turn, ie 0 -> 760 -> etc... or 0 -> 360 -> 0

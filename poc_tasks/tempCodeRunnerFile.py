@@ -1,0 +1,1 @@
+print("@turn: currDegree = ", currDegree, "running: ", abs(currDegree) - abs(initDegree), " < ", abs(delta))
