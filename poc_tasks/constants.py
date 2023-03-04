@@ -26,13 +26,16 @@ PWR = 15
 WHEEL_DIA_M = 0.05556504
 
 
-
-X_AXIS = (1,0)
+#Robot assumes it is facing the pos x-axis
+Y_AXIS = (0,1)
 ORIGIN = (0,0)
 ###CHANGE AS NEEDED FOR THE POC POINT TO POINT MOVE
 ##THE 4 POINTS TO NAVIGATE TO
-GRID_SIZE_CONVERSION = 1 #conversion from units to meters ie units * GRID_SIZE_CONVERSION = meters
-POINT1 = (4,4)
-POINT2 = (2, 3)
-POINT3 = (-1, -2)
-POINT4 = (4, 4)
+
+#ex 1 grid size unit is 1 ft, so grid conversion should be .305
+#ex 1 grid size unit is 1 m, so gird conversion should be 1
+GRID_SIZE_CONVERSION = .305 #conversion from units to meters ie units * GRID_SIZE_CONVERSION = meters
+POINT1 = (1,1)
+POINT2 = (1, 1)
+POINT3 = (2,2)
+POINT4 = (0, 0)

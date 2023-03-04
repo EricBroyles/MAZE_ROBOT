@@ -1,24 +1,18 @@
-import time
-import numpy as np
-from math import pi
+import math
 
+def angleBetween(v1, v2):
+    dot_product = v1[0]*v2[0] + v1[1]*v2[1]
+    v1_mag = math.sqrt(v1[0]**2 + v1[1]**2)
+    v2_mag = math.sqrt(v2[0]**2 + v2[1]**2)
+    cos_angle = dot_product / (v1_mag * v2_mag)
+    angle_in_radians = math.acos(cos_angle)
+    return math.degrees(angle_in_radians)
 
-def unit_vector(vector):
-    """ Returns the unit vector of the vector.  """
-    return vector / np.linalg.norm(vector)
-
-def angle_between(v1, v2):
-    """ Returns the angle in degrees between vectors 'v1' and 'v2'::
-
-            >>> angle_between((1, 0, 0), (0, 1, 0))
-            1.5707963267948966
-            >>> angle_between((1, 0, 0), (1, 0, 0))
-            0.0
-            >>> angle_between((1, 0, 0), (-1, 0, 0))
-            3.141592653589793
-    """
-    v1_u = unit_vector(v1)
-    v2_u = unit_vector(v2)
-    radian = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
-    return radian * (180 / pi)
+#returns the nearest whole num
+def vectorRotation(v1, v2):
+    angle = angleBetween(v1, v2)
+    cross_product = v1[0]*v2[1] - v1[1]*v2[0]
+    if cross_product < 0:
+        angle = -angle
+    return round(angle)
 

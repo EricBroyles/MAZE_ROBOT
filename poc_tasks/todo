@@ -1,1 +1,2 @@
-1. reasons for inaccuracy: sensor not reading properly, check to congig it better, not running enough checks, decrease the delay
+1. get the motor to spin at the same dps
+2. the toPoint should return the actual position based on the encoder vals, rather than what it was trying to get to
