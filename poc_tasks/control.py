@@ -76,7 +76,14 @@ def pause():
     go = input("enter anything to start again: ")
     return go
 
+
+
+
+
 def goToPoint(fromPt, toPt):
+    fromPt = float(fromPt) + FLOATIFY
+    fromPt = float(toPt) + FLOATIFY
+
     xMove = toPt[0] - fromPt[0]
     yMove = toPt[1] - fromPt[1]
 
@@ -94,7 +101,7 @@ def goToPoint(fromPt, toPt):
     move(GRID_SIZE_CONVERSION * abs(yMove))
 
 
-    if (0, yMove) != (0, 1):
+    if (0, yMove/ abs(yMove)) != (0, 1):
         turn(-angleBetween * 2)
 
     return toPt

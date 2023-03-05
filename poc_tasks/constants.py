@@ -23,8 +23,10 @@ LEGO_ITEMS = {
 
 DELAY = .02
 PWR = 15
-TARGET_DPS = 180
+TARGET_DPS = 360
 WHEEL_DIA_M = 0.05556504
+
+FLOATIFY = .0000001 #to convert any point into that point but .0000001 larger, to avoid /0 errors 
 
 
 #Robot assumes it is facing the pos x-axis
@@ -36,8 +38,11 @@ ORIGIN = (0,0)
 
 #ex 1 grid size unit is 1 ft, so grid conversion should be .305
 #ex 1 grid size unit is 1 m, so gird conversion should be 1
-GRID_SIZE_CONVERSION = .305 #conversion from units to meters ie units * GRID_SIZE_CONVERSION = meters
-POINT1 = (1,1)
-POINT2 = (0, 2)
-POINT3 = (2,2)
-POINT4 = (0, 0)
+#.305
+#.508
+#0.46
+GRID_SIZE_CONVERSION = .46 #conversion from units to meters ie units * GRID_SIZE_CONVERSION = meters
+POINT1 = (1,2)
+POINT2 = (3, 3)
+POINT3 = (4,0)
+POINT4 = (1, 4) #basically the origin with no zero error
