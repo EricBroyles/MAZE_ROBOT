@@ -1,5 +1,5 @@
 import math
-from helpers import angle_between
+from helpers import vectorRotation
 from test_turn_math import turn
 GRID_SIZE_CONVERSION = 1
 ORIGIN = (0,0)
@@ -43,6 +43,34 @@ def angle_between(v1, v2):
     return math.degrees(angle_in_radians)
 
 
-print(angle_between((0,1), (1,1)))
+#print(angle_between((0,1), (1,1)))
 
-#change hte turnAngle to a +
+
+def goToPoint(fromPt, toPt):
+
+    xMove = toPt[0] - fromPt[0]
+    yMove = toPt[1] - fromPt[1]
+
+    fromVec = Y_AXIS
+
+    angleBetween = vectorRotation(fromVec, (xMove, 0))
+
+    print('turn by ', angleBetween, " move x: ", xMove)
+    #turn(angleBetween)
+    #move(xMove)
+
+    angleBetween = vectorRotation((xMove, 0), (0, yMove))
+
+    print('turn by ', angleBetween, " move y: ", yMove)
+    # turn(angleBetween)
+    # move(yMove)
+
+
+    if (0, yMove) != (0, 1):
+        print('turn by ', -angleBetween * 2)
+        #turn(-angleBetween * 2)
+
+        
+goToPoint((0,0), (1,1))
+goToPoint((1,1), (0,0))
+goToPoint((0,0), (2,3))

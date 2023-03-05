@@ -7,10 +7,10 @@ configLEGO()
     
 try:
     print("starting")
-    pt1 = goToPoint(Y_AXIS, POINT1)
+    pt1 = goToPoint(ORIGIN, POINT1)
     pause()
-    # pt2 = goToPoint(pt1, POINT2)
-    # pause()
+    pt2 = goToPoint(pt1, POINT2)
+    pause()
     # pt3 = goToPoint(pt2, POINT3)
     # pause()
     # pt4 = goToPoint(pt3, POINT4)
