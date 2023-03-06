@@ -80,9 +80,15 @@ def pause():
 
 
 
+"""
+WARNING: ZEROS OF ANY FORM CAUSE PROBLEMS, ie 0,0 no good
+also when moving 0 in either x or y this causes probelems with divide by 0
+
+NEEDS TO BE RESOLVED, temp fix by using pts close to 0 but not exactly ie .000001
+
+"""
+
 def goToPoint(fromPt, toPt):
-    fromPt = float(fromPt) + FLOATIFY
-    fromPt = float(toPt) + FLOATIFY
 
     xMove = toPt[0] - fromPt[0]
     yMove = toPt[1] - fromPt[1]
