@@ -1,6 +1,6 @@
 from main import myRobot
 from time import time
-from constants import SENSOR_DELAY, NUM_DATA_PTS, LESS_DATA_PTS, GYROSCOPE_XY_IDX
+from constants import DELAY, NUM_DATA_PTS, LESS_DATA_PTS, GYROSCOPE_XY_IDX
 from clean import clean
 
 #base functions to read all sensors, encoders etc.
@@ -25,7 +25,7 @@ def readEncoders():
         for item in unclean:
             reading = myRobot.lego.get_motor_encoder(item["port"])
             item["data"].append(reading)
-        time.sleep(SENSOR_DELAY)
+        time.sleep(DELAY)
         dataPts += 1
 
     clean = clean(unclean.copy(), "motor")
@@ -44,7 +44,7 @@ def readGyroscope():
         for item in unclean:
             reading = myRobot.lego.get_sensor(item["port"])[GYROSCOPE_XY_IDX]
             item["data"].append(reading)
-        time.sleep(SENSOR_DELAY)
+        time.sleep(DELAY)
         dataPts += 1
 
     clean = clean(unclean.copy(), "gyroscope")
@@ -64,7 +64,7 @@ def readUltrasonic():
         for item in unclean:
             reading = myRobot.grove.ultrasonicRead(item["port"])
             item["data"].append(reading)
-        time.sleep(SENSOR_DELAY)
+        time.sleep(DELAY)
         dataPts += 1
 
     clean = clean(unclean.copy(), "ultrasonic")

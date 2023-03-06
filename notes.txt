@@ -7,3 +7,8 @@ need to be able to clean binary data in clean
 
 
 QUESTION: DOES THE EV3_GYRO_ABS just get larger as u turn, ie 0 -> 760 -> etc... or 0 -> 360 -> 0
+
+
+use pre, run -> out, fin
+
+base time should be updated when config is done

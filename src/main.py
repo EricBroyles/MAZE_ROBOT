@@ -1,4 +1,5 @@
 import constants
+import config
 
 from robot import Robot
 
@@ -8,6 +9,7 @@ from robot import Robot
 
 try:
     myRobot = Robot()
+    myRobot.initRobot()
     
 except IOError as error:
     print(error)

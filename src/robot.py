@@ -1,12 +1,12 @@
 from time import time
-import constants
+from constants import *
+from config import configRobot
 import lib.brickpi3 as BP
 import lib.grovepi as GROVE
 from inputs.clean import initSensorDelay
 
 
 class Robot:
-
     def __init__(self):
 
         ##GROVE INSTANCE
@@ -14,6 +14,7 @@ class Robot:
 
         ##LEGO INSTANCE
         LEGO = BP.BrickPi3()
+        self.brick = BP
         self.lego = LEGO
 
         ##ROBOT STRUCT
@@ -21,17 +22,17 @@ class Robot:
             list of dicts, where each dict is a component of the robot ie a motor
             type: motor, ultrasonic, ir
             loc: location on robot ie front_left
-            port: 
+            port: take a wild guess
             wheel_dia: diameter of the wheel in meters
-            init_delay: for select sensors that will read invalid if not given time to config
+            inverse: if inverse then neg encoder reading is going in pos direction
         """
         ROBOT = [
-            {"type": "motor", "loc": "left", "port": LEGO.Port_A, "wheel_dia": 10, "init_delay": False},
-            {"type": "motor", "loc": "right", "port": LEGO.Port_D, "wheel_dia": 10, "init_delay": False},
-            {"type": "gyroscope", "loc": "any", "port": LEGO.Port_1, "sensor_type": LEGO.SENSOR_TYPE.EV3_GYRO_ABS, "init_delay": True},
-            {"type": "ultrasonic", "loc": "left", "port": 4, "init_delay": False},
-            {"type": "ultrasonic", "loc": "front", "port": 8, "init_delay": False},
-            {"type": "ultrasonic", "loc": "right", "port": 7, "init_delay": False},
+            {"type": "motor", "loc": "left", "port": LEGO.Port_A, "wheel_dia": WHEEL_DIA, "inverse": True},
+            {"type": "motor", "loc": "right", "port": LEGO.Port_D, "wheel_dia": WHEEL_DIA, "inverse": True},
+            {"type": "gyroscope", "loc": "any", "port": LEGO.Port_1, "sensor_type": LEGO.SENSOR_TYPE.EV3_GYRO_ABS},
+            {"type": "ultrasonic", "loc": "left", "port": 4},
+            {"type": "ultrasonic", "loc": "front", "port": 8},
+            {"type": "ultrasonic", "loc": "right", "port": 7},
         ]
 
         ##TIME DATA
@@ -39,8 +40,8 @@ class Robot:
             baseTime: gets set once to be used to find the elapsed time
             time: gets regularly updated with the current time
         """
-        self.baseTime = time.time()
-        self.time = self.baseTime
+        self.baseTime = None
+        self.time = None
 
         ##POSITION DATA
         """
@@ -64,35 +65,32 @@ class Robot:
         """
         self.sensors = {}
         
-
     def __str__(self):
         return f"myRobot -> {self.time - self.baseTime}: "
     
-
-    """
-    Actions:
-    motor -> reset the motor encoder
-    gyroscope -> set sensor type, perform delay until reading values
-
-    """
     def initRobot(self):
+        """
+        initialize all sensors, wait for them to be configured
+        set all encoder to 0
+        configure time and space
+        """
+        configRobot()
 
-        for item in self.ROBOT:
-            if "motor" in item.keys():
-                amount = self.lego.get_motor_encoder(item["port"])
-                self.lego.offset_motor_encoder(item["port"], amount)
-            elif "gyroscope" in item.keys():
-                self.lego.set_sensor_type(item["port"], item["sensor_type"])
-                initSensorDelay(item["type"], item["loc"])
+        #config space and time
+        self.baseTime = time.time()
+        self.time = self.baseTime
+        self.position = [{"t": self.baseTime, "x": INIT_X_POS, "y": INIT_Y_POS}]
+
+
         
 
     def updateTime(self):
         self.time = time.time()
 
-    """
-    returns the time that has passed from start in ms
-    """
     def getTime(self):
+        """
+        returns the time that has passed from start in s
+        """
         return (self.time - self.baseTime)
 
     def updatePosition(self):
