@@ -27,9 +27,3 @@ def clean(type, list):
     return cleanData[0]
     
 
-
-##waits until the sensor is not reading invalid data
-def initSensorDelay(type, loc):
-
-
-    pass

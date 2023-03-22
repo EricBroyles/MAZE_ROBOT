@@ -3,7 +3,7 @@ from constants import *
 from config import configRobot
 import lib.brickpi3 as BP
 import lib.grovepi as GROVE
-from inputs.clean import initSensorDelay
+from inputs import read
 
 
 class Robot:
@@ -81,9 +81,6 @@ class Robot:
         self.time = self.baseTime
         self.position = [{"t": self.baseTime, "x": INIT_X_POS, "y": INIT_Y_POS}]
 
-
-        
-
     def updateTime(self):
         self.time = time.time()
 
@@ -93,17 +90,29 @@ class Robot:
         """
         return (self.time - self.baseTime)
 
-    def updatePosition(self):
-        pass
+    def setPosition(self, pos):
+        """
+        pos = the accurate position of the robot at some time instance
+        """
+        self.position = self.position.append(pos)
+        
 
+    def readData(self, type, loc = None):
+        """
+        gen function to read any sensor or encoder on the robot
 
-    """
-    generic function to read any sensor or encoder on the robot
+        when loc is unspecified, and their are multiples of the same type all will be returned
+        """
 
-    when loc is unspecified, and their are multiples of the same type all will be returned
-    """
-    def readData(type, loc = None):
-        pass
+        #get the items
+        items = []
+        for item in self.ROBOT:
+            if(item["type"] == type):
+               if(loc == None or loc == item["loc"]):
+                   items.append(item)
+
+        read(items, type)
+
 
     
 
