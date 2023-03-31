@@ -111,7 +111,9 @@ class Robot:
                if(loc == None or loc == item["loc"]):
                    items.append(item)
 
-        read(items, type)
+        return read(items, type)
+
+
 
 
     

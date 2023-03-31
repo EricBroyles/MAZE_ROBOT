@@ -1,16 +1,29 @@
-import constants
-import config
 
-from robot import Robot
+import time
+from constants import *
+from config import configRobot
 
 
+##CONFIG
+configRobot()
 
-#stores the main logic to run at the final test day
+
+        #config space and time
+        self.baseTime = time.time()
+        self.time = self.baseTime
+        self.position = [{"t": self.baseTime, "x": INIT_X_POS, "y": INIT_Y_POS}]
 
 try:
-    myRobot = Robot()
-    myRobot.initRobot()
-    
+
+    found_exit = False
+
+    while not(found_exit):
+
+
+
+        pass
+    pass
+
 except IOError as error:
     print(error)
 except TypeError as error:
