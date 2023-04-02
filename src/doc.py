@@ -34,6 +34,7 @@ junc_items = [
         "is_expl": , #T/F, has this junction been traveled down
         "pos_junc": , #(x, y, t), this is shared between all different direction vectors that make up a junc
         "dir_vec_junc": , #(x,y), the direction to travel down the junction
+        "uncertain": ,#T/F, if a juncction continues in the direction of travel, it needes to be checked to see if it is a wall
     }, ...]
 
     

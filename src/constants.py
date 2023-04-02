@@ -6,6 +6,9 @@ import lib.grovepi as grove
 INIT_X_POS = 0
 INIT_Y_POS = 0 
 
+#the initial direction
+POS_Y_VEC = (0, 1)
+
 #the size of the wheel in m
 WHEEL_DIA = 0.05556504 #meters
 
@@ -17,6 +20,7 @@ MAX_SENSOR_CONFIG_TIME = 5 #seconds
 
 #amount of time (s) between getting data from any robot item (sensor/encoder)
 DELAY = .01
+MICRO_DELAY = .005
 
 #the amount of time the sensors will gather data for
 SENSOR_READ_TIME = .1
@@ -29,6 +33,11 @@ LESS_DATA_PTS = round(NUM_DATA_PTS / 2)
 
 #all items to have data proccessed the same way
 MEDIAN_CLEAN = ["motor", "gyroscope", "ultrasonic"]
+
+#the distance to create a buffer zone around the entrance to prevent ever going back out the way we came in
+ENTR_BUFFER_LEN = .1 #meters
+
+ULTRA_THRESH = 30 # wall exists < 30 wall does not exist > 30
 
 
 ##GROVE INSTANCE
@@ -49,11 +58,11 @@ BP = bp
     inverse: if inverse then neg encoder reading is going in pos direction
 """
 ROBOT = [
-    {"name": "left_motor", "port": LEGO.Port_A, "wheel_dia": WHEEL_DIA, "inverse": True},
-    {"name": "right_motor", "port": LEGO.Port_D, "wheel_dia": WHEEL_DIA, "inverse": True},
-    {"name": "any_gyroscope", "port": LEGO.Port_1, "sensor_type": LEGO.SENSOR_TYPE.EV3_GYRO_ABS},
-    {"name": "left_ultrasonic", "port": 4},
-    {"name": "front_ultrasonic", "port": 8},
+    {"name": "left_motor", "port": LEGO.PORT_A, "wheel_dia": WHEEL_DIA, "inverse": True},
+    {"name": "right_motor", "port": LEGO.PORT_B, "wheel_dia": WHEEL_DIA, "inverse": True},
+    {"name": "any_gyroscope", "port": LEGO.PORT_3, "sensor_type": LEGO.SENSOR_TYPE.EV3_GYRO_ABS},
+    {"name": "left_ultrasonic", "port": 2},
+    {"name": "front_ultrasonic", "port": 3},
     {"name": "right_ultrasonic", "port": 7},
 ]
 

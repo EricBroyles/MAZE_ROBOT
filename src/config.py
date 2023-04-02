@@ -1,5 +1,6 @@
 import time
 from constants import *
+from helpers import getType
 
 #waits for a LEGO sensor to be configured
 #the lego instance, and the BP instance
@@ -28,7 +29,7 @@ def loadSensor(port):
 def configRobot():
     
     for item in ROBOT:
-        type = item.split("_")[-1]
+        type = getType(item)
 
         if(type == "motor"):
             LEGO.reset_motor_encoder(item["port"])
@@ -44,3 +45,6 @@ def configRobot():
 
         else:
             print(f"ERROR [ Pre: @config ] item type: {item['type']} does not match any know type")
+
+        print("remove latter")
+    print("@config: COMPLETE CONFIG")

@@ -41,7 +41,8 @@ ORIGIN = (0,0)
 #.305
 #.508
 #0.46
-GRID_SIZE_CONVERSION = .46 #conversion from units to meters ie units * GRID_SIZE_CONVERSION = meters
+#conversion from units to meters ie units * GRID_SIZE_CONVERSION = meters
+GRID_SIZE_CONVERSION = .46 #.305 #.46 
 POINT1 = (1,2)
 POINT2 = (3, 3)
 POINT3 = (4,0)

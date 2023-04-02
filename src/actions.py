@@ -1,7 +1,7 @@
 import time
 from math import pi
 from constants import *
-from helpers import getItemByName
+from helpers import getItemByName, getType
 from inputs import read
 
 #this applies the inverse to the motor
@@ -14,24 +14,22 @@ def setMotorDPS(name, dps, items = ROBOT):
 
 def resetEncoders(items = ROBOT):
     for item in items:
-        type = item.split("_")[-1]
+        type = getType(item)
         if(type == "motor"):
             LEGO.reset_motor_encoder(item["port"])
 
 #stops all motors
 def stop(items = ROBOT):
     for item in items:
-        type = item.split("_")[-1]
+        type = getType(item)
         if type == "motor":
             name = item["name"]
             setMotorDPS(name, 0)
             print(f"@stop: stopped motor with name: {name}")
 
 
-def turn(initDegree, delta):
-    stop()
-
-    initDegree = read([getItemByName("any_gyroscope")])
+def turn(delta):
+    initDegree = read("gyroscope")
     print("@turn: initDegree = ", initDegree)
 
     target = initDegree + delta
@@ -41,11 +39,11 @@ def turn(initDegree, delta):
 
     #go cw -> right
     if(delta < 0):
-        setMotorDPS("left_motor", TURN_DPS)
-        setMotorDPS("right_motor", -TURN_DPS)
+        setMotorDPS("left_motor", -TURN_DPS)
+        setMotorDPS("right_motor", TURN_DPS)
         while(currDegree > target):
             time.sleep(DELAY / 2)
-            currDegree = read([getItemByName("any_gyroscope")])
+            currDegree = read("gyroscope")
         
     #go ccw -> left
     elif(delta > 0):
@@ -53,18 +51,18 @@ def turn(initDegree, delta):
         setMotorDPS("right_motor", -TURN_DPS)
         while(currDegree < target):
             time.sleep(DELAY / 2)
-            currDegree = read([getItemByName("any_gyroscope")])
+            currDegree = read("gyroscope")
 
     else:
         print("@turn ERROR !!!!! no turn by 0 degree")
         return 0
     
     stop()
-    print("@turn: DONE ROTATION -> ", read([getItemByName("any_gyroscope")]), " vs currDegree: ", currDegree, "with initDegree: ", initDegree)
+    print("@turn: DONE ROTATION -> ", read("gyroscope"), " vs currDegree: ", currDegree, "with initDegree: ", initDegree)
 
 
 #turns to a desired vector
-def vectorTurn():
+def vectorTurn(from_angle, to_vector):
 
     pass
 
@@ -76,25 +74,33 @@ def startMove(dps = MOVE_DPS):
     setMotorDPS("left_motor", dps)
     setMotorDPS("right_motor", dps)
 
-
+#distance in meters
 def move(distance):
-    stop()
+
+    raw_pos = [] #[{"t": , "left_motor": , "right_motor": }, ...]
+    
     resetEncoders()
-    currLeftMotorEncoder = read([getItemByName("left_motor")]) 
+    motorReading = read("motor")
+    (currLeftMotorEncoder, currRightMotorEncoder) = (motorReading["left_motor"], motorReading["right_motor"])
+    raw_pos.append({"t": time.time(), "left_motor": currLeftMotorEncoder, "right_motor": currRightMotorEncoder})
     finalEncoderVal = 360 * (abs(distance) / (pi * WHEEL_DIA))
 
     #either 1, or -1 for a reverse
-    reverse = 1 if distance < 0 else -1
+    reverse = -1 if distance < 0 else 1
 
     startMove(reverse * MOVE_DPS)
 
     while(abs(currLeftMotorEncoder) <= finalEncoderVal):
         time.sleep(DELAY)
-        currLeftMotorEncoder = read([getItemByName("left_motor")]) 
+        motorReading = read("motor")
+        (currLeftMotorEncoder, currRightMotorEncoder) = (motorReading["left_motor"], motorReading["right_motor"])
+        raw_pos.append({"t": time.time(), "left_motor": currLeftMotorEncoder, "right_motor": currRightMotorEncoder})
 
-    print("@MOVE: DONE MOVE -> LEFT: ", read([getItemByName("left_motor")]) , " RIGHT: ", read([getItemByName("right_motor")]) )
+    print("@MOVE: DONE MOVE -> LEFT: ", read("motor")["left_motor"]  , " RIGHT: ", read("motor")["right_motor"]  )
     
     stop()
+
+    return raw_pos
 
 
 
