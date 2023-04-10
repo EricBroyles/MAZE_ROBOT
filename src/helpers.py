@@ -66,32 +66,63 @@ def encoderToDistance(encoder, wheel_radius = WHEEL_DIA):
     distance = (encoder / 360) * (2 * math.pi * wheel_radius)
     return distance
 
-#raw_sensor_data = [{"name": }, ...]
-def getFinalPosAndVec(raw_sensor_data, wheel_diameter = WHEEL_DIA):
-    position = [0, 0] #the initial position the robot starts at
-    init_dir_vec = [1, 0] #teh vector corrsponding to 0 degrees or 360 degress from gyro, ie the initial direction it is facing
-    dir_vec = []
-    circumference = math.pi * wheel_diameter
-    for data in raw_sensor_data:
-        # Calculate the distance travelled by each wheel based on the motor values
-        left_distance = data["left_motor"] / 360 * circumference
-        right_distance = data["right_motor"] / 360 * circumference
-        
-        # Calculate the total distance travelled and the angle turned
-        total_distance = (left_distance + right_distance) / 2
-        angle = math.radians(data["any_gyroscope"])
-        
-        # Update the direction vector based on the angle turned
-        x, y = init_dir_vec
-        
-        dir_vec = [x * math.cos(angle) - y * math.sin(angle),
-                            x * math.sin(angle) + y * math.cos(angle)]
-        print(dir_vec)
-        # Update the position based on the total distance travelled and the direction vector
-        position[0] += total_distance * dir_vec[0]
-        position[1] += total_distance * dir_vec[1]
+
+#raw_sensor: {all sensor readings or just the encoders and gyro} -> must have at lease one item
+#all_prev_pos: [(x, y), ....] -> must have at least one item
+def getFinalPosAndVec(raw_sensor_data, all_prev_pos, wheel_dia = WHEEL_DIA):
+
+    #error handling
+    if(len(raw_sensor_data) < 1):
+        print("ERROR at getFINALPOSANDVEC raw_sensor_data is too short")
+        return
+    elif(len(all_prev_pos) < 1):
+        all_prev_pos = [(0,0)]
+
+    if(not(-2 < -len(raw_sensor_data))):
+        prev_distance = ((raw_sensor_data[-2]["left_motor"] + raw_sensor_data[-2]["right_motor"]) / 2) / 360 * (math.pi * wheel_dia)
+    else:
+        prev_distance = 0
+
+    distance = ((raw_sensor_data[-1]["left_motor"] + raw_sensor_data[-1]["right_motor"]) / 2) / 360 * (math.pi * wheel_dia)
+
+    #convert this into a position with the angle
+    x_dir_vec = math.cos(math.radians(raw_sensor_data[-1]["any_gyroscope"]))
+    y_dir_vec = math.sin(math.radians(raw_sensor_data[-1]["any_gyroscope"]))
     
-    return position, tuple(dir_vec)
+    x_pos, y_pos = (x_dir_vec * (distance - prev_distance), y_dir_vec * (distance - prev_distance))
+
+    prev_x_pos, prev_y_pos = all_prev_pos[-1]
+    final_pos = (x_pos + prev_x_pos, y_pos + prev_y_pos)
+    
+    final_dir_vec = (x_dir_vec, y_dir_vec)
+
+    return final_pos, final_dir_vec
+
+# #raw_sensor_data = [{"name": }, ...]
+# #returns a single final position and vector reached after some encoder values and gyro readings are recorded
+# #assumes robot only moves forawrd, and any encoder change due to a turn is offset before this
+# def getFinalPosAndVec(raw_sensor_data, wheel_dia = WHEEL_DIA):
+    
+#     final_pos = (0, 0)
+#     final_dir_vec = (1, 0) #corresponds to 0 degrees
+#     prev_distance = 0
+
+#     for item in raw_sensor_data:
+#         distance = ((item["left_motor"] + item["right_motor"]) / 2) / 360 * (math.pi * wheel_dia)
+
+#         #convert this into a position with the angle
+#         x_dir_vec = math.cos(math.radians(item["any_gyroscope"]))
+#         y_dir_vec = math.sin(math.radians(item["any_gyroscope"]))
+#         x_pos, y_pos = (x_dir_vec * (distance - prev_distance), y_dir_vec * (distance - prev_distance))
+#         prev_x_pos, prev_y_pos = final_pos
+
+#         final_pos = (x_pos + prev_x_pos, y_pos + prev_y_pos)
+        
+#         final_dir_vec = (x_dir_vec, y_dir_vec)
+
+#         prev_distance = distance
+
+#     return final_pos, final_dir_vec
 
 def getDirectionVectors(front_vector):
     # Ensure that the input vector has unit length

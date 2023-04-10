@@ -1,6 +1,7 @@
 import time
 from constants import *
 from helpers import getType
+from actions import turn
 
 #waits for a LEGO sensor to be configured
 #the lego instance, and the BP instance
@@ -48,3 +49,13 @@ def configRobot():
 
         print("remove latter")
     print("@config: COMPLETE CONFIG")
+
+
+
+def orientToYAxis():
+    ans = input("CHECK: DID I PLACE THE ROBOT FACING THE X-AXIS (y/n)")
+    if(ans != "y"):
+        input("PLEASE HIT ctrl-c to restart")
+    else:
+        turn(90)
+    print("ROBOT IS FACING THE y-axis" )

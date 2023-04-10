@@ -28,13 +28,18 @@ def stop(items = ROBOT):
             print(f"@stop: stopped motor with name: {name}")
 
 
-def turn(delta):
+def turn(delta, type = "uncontrolled"):
+
+    print("IMPORTANT AT TURN REMEMBER TO TEST THE ENDCODERS")
+
     initDegree = read("gyroscope")
     print("@turn: initDegree = ", initDegree)
 
     target = initDegree + delta
     currDegree = initDegree
 
+    initEncoders = read("motor") #{"left_motor":, "right_motor": }
+    print("TURN initEncoders: ", initEncoders)
     #begin to turn
 
     #go cw -> right
@@ -44,7 +49,11 @@ def turn(delta):
         while(currDegree > target):
             time.sleep(DELAY / 2)
             currDegree = read("gyroscope")
-        
+
+            finalEncoders = read("motor")
+            LEGO.offset_motor_encoder(ROBOT["left_motor"], finalEncoders["left_motor"] - initEncoders["left_motor"])
+            LEGO.offset_motor_encoder(ROBOT["right_motor"], finalEncoders["right_motor"] - initEncoders["right_motor"])
+
     #go ccw -> left
     elif(delta > 0):
         setMotorDPS("left_motor", TURN_DPS)
@@ -53,11 +62,17 @@ def turn(delta):
             time.sleep(DELAY / 2)
             currDegree = read("gyroscope")
 
+            finalEncoders = read("motor")
+            LEGO.offset_motor_encoder(ROBOT["left_motor"], finalEncoders["left_motor"] - initEncoders["left_motor"])
+            LEGO.offset_motor_encoder(ROBOT["right_motor"], finalEncoders["right_motor"] - initEncoders["right_motor"])
+
     else:
         print("@turn ERROR !!!!! no turn by 0 degree")
         return 0
     
-    stop()
+    if(type == "uncontrolled"):
+        stop()
+    print("TURN done with Encoders: ", read("motor"))
     print("@turn: DONE ROTATION -> ", read("gyroscope"), " vs currDegree: ", currDegree, "with initDegree: ", initDegree)
 
 
