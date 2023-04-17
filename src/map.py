@@ -1,5 +1,3 @@
-
-
 def findIndex(matrix, target):
     for i in range(len(matrix)):
         for j in range(len(matrix[i])):

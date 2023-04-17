@@ -1,10 +1,12 @@
-# def checkSenarios(raw_sensor_data):
 import math
 
-#raw_sensor: {all sensor readings or just the encoders and gyro} -> must have at lease one item
-#all_prev_pos: [(x, y), ....] -> must have at least one item
+
+##BE SURE TO CAHNGE THE getLocType in all code
+##chagne any constants back to what they should be
+
 def getFinalPosAndVec(raw_sensor_data, all_prev_pos, wheel_dia = 1/math.pi):
 
+    #error handling
     if(len(raw_sensor_data) < 1):
         print("ERROR at getFINALPOSANDVEC raw_sensor_data is too short")
         return
@@ -31,14 +33,205 @@ def getFinalPosAndVec(raw_sensor_data, all_prev_pos, wheel_dia = 1/math.pi):
 
     return final_pos, final_dir_vec
 
-print("testing")
 
-test = [{"left_motor": 0, "right_motor": 0, "any_gyroscope": 90}, {"left_motor": 360, "right_motor": 360, "any_gyroscope": 90}, {"left_motor": 720, "right_motor": 720, "any_gyroscope": 0}, {"left_motor": 1080, "right_motor": 1080, "any_gyroscope": -90}, {"left_motor": 1440, "right_motor": 1440, "any_gyroscope": -180}]
-pos = [(0,0)]
-for i, item in enumerate(test):
-    p, v = getFinalPosAndVec(test[0:i+1], pos)
-    print(p, v)
-    pos.append(p)
+def getDirectionVectors(front_vector):
+    # Ensure that the input vector has unit length
+    magnitude = (front_vector[0]**2 + front_vector[1]**2)**0.5
+    front_vector = (front_vector[0] / magnitude, front_vector[1] / magnitude)
+
+    # Define an arbitrary "up" direction
+    up_vector = (0, 1)
+
+    # Compute the cross product between the front and up vectors to get the "right" vector
+    right_vector = (
+        front_vector[1] * up_vector[0] - front_vector[0] * up_vector[1],
+        front_vector[0] * up_vector[0] + front_vector[1] * up_vector[1]
+    )
+    right_magnitude = (right_vector[0]**2 + right_vector[1]**2)**0.5
+    right_vector = (right_vector[0] / right_magnitude, right_vector[1] / right_magnitude)
+
+    # Compute the cross product between the "right" and front vectors to get the "left" vector
+    left_vector = (
+        front_vector[0] * up_vector[1] - front_vector[1] * up_vector[0],
+        front_vector[0] * up_vector[0] + front_vector[1] * up_vector[1]
+    )
+    left_magnitude = (left_vector[0]**2 + left_vector[1]**2)**0.5
+    left_vector = (left_vector[0] / left_magnitude, left_vector[1] / left_magnitude)
+
+    # Compute the negation of the front vector to get the "back" vector
+    back_vector = (-front_vector[0], -front_vector[1])
+
+    return {"front": front_vector,"right": right_vector,"left": left_vector,"back": back_vector}
+
+def getLocType(item, method = "item"):
+
+    split = "ERROR"
+    if method == "item":
+        split = item["name"].split("_")
+    else:
+        split = item.split("_")
+
+    loc, type = split[0], split[-1]
+    return loc, type
+
+
+def addJuncItem(id, final_pos, is_expl, dir_vec, is_back, junc_items):
+    junc_item = {"id": id, "is_expl": is_expl, "pos": final_pos, "dir_vec": dir_vec, "is_back": is_back}
+    junc_items.append(junc_item)
+
+
+#raw_sensor_data = [{all items}]
+#if junc_items has no items then we are adding the entrance
+##assmues that the logic for a junction has been met!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+def createJunc(all_sensors_data, all_pos, ideal_dir_vec, junc_items, ultra_thresh = 30):
+
+    final_pos, not_used_real_dir_vec = getFinalPosAndVec(all_sensors_data, all_pos)
+    id = None
+
+    #id is 1 for first item, and +1 to last id for any other
+    #note id is used to group multiple junctions, so multiple juncs share an id
+    if len(junc_items) == 0:
+        id = 1
+    else:
+        id = junc_items[-1]["id"] + 1
+    
+    #is_explored is only true if the item is the entrance, ie first item
+    if id == 1:
+        is_expl = True
+    else:
+        is_expl = False
+
+    #find all other direction vectors for the given ideal_dir_vec
+    directions = getDirectionVectors(ideal_dir_vec) #{"front": (x,y), "right": ,  "left": , "back": }
+
+    #create the junction for any ultrasonic not seeing a wall
+    for key, val in all_sensors_data[-1].items():
+        
+        loc, type = getLocType(key, "string")
+        if type == "ultrasonic":
+            if val > ultra_thresh:
+                is_back = False
+                addJuncItem(id, final_pos, is_expl, directions[loc], is_back, junc_items)
+
+    #create the back junction
+    is_back = True 
+
+    #the back component for the second junction is already explored so as to not go back into the entrance
+    if id == 2:
+        is_expl = True
+
+    addJuncItem(id, final_pos, is_expl, directions["back"], is_back, junc_items)
+
+
+print("testing")
+ideal_dir_vec = (0,1)
+junc_items = []
+all_pos = [(0,0)]
+all_sensors_data = [{"front_ultrasonic": 80, "right_ultrasonic": 30, "left_ultrasonic": 30, "left_motor": 0, "right_motor": 0, "any_gyroscope": 90}]
+
+pos, na = getFinalPosAndVec(all_sensors_data, all_pos)
+all_pos.append(pos)
+
+createJunc(all_sensors_data, all_pos, ideal_dir_vec, junc_items)
+print(junc_items)
+
+
+all_sensors_data = [{"front_ultrasonic": 80, "right_ultrasonic": 30, "left_ultrasonic": 30, "left_motor": 360, "right_motor": 360, "any_gyroscope": 90}]
+
+pos, na = getFinalPosAndVec(all_sensors_data, all_pos)
+all_pos.append(pos)
+
+createJunc(all_sensors_data, all_pos, ideal_dir_vec, junc_items)
+print(junc_items)
+
+
+
+
+# #assume no 3 way junctions, any 3 way is an exit
+# def checkSenarios(all_sensors_data):
+
+#     print("dont forget to replace the Ultra Thresh")
+
+#     is_junc = False
+#     is_deadend = False #special type of junction
+#     is_exit = False #special type of junction
+#     is_hallway = False #not a junction
+
+#     #get the current sensor reading
+#     curr_sensors = all_sensors_data[-1] #{of all sensors}
+
+#     #get if front, left and right are seeing open space, True = seeing open space
+#     front = True if curr_sensors["front_ultrasonic"] > 30 else False
+#     right = True if curr_sensors["right_ultrasonic"] > 30 else False
+#     left  = True if curr_sensors["left_ultrasonic" ] > 30 else False
+
+#     if front and right and left:
+#         #exit = all sensor are seeing open space
+#         is_exit = True
+
+#     elif not(front or right or left):
+#         #deadend = no sensor is seeing open space
+#         is_deadend = True
+    
+#     elif front and not(right or left):
+#         #hallway = only when the front sensor is seeing open space
+#         is_hallway = True
+    
+#     elif right or left:
+#         #junc = at lease the left or right sensor is seeing open space, could be more 
+#         is_junc = True
+
+#     if not(is_hallway):
+#         print("stopping the robot dont forget to change")
+#         #stop()
+
+#     return is_junc, is_deadend, is_exit, is_hallway
+
+
+# print(checkSenarios([{"front_ultrasonic": 40, "right_ultrasonic": 40, "left_ultrasonic": 30}]))
+
+
+
+# import math
+
+# #raw_sensor: {all sensor readings or just the encoders and gyro} -> must have at lease one item
+# #all_prev_pos: [(x, y), ....] -> must have at least one item
+# def getFinalPosAndVec(raw_sensor_data, all_prev_pos, wheel_dia = 1/math.pi):
+
+#     if(len(raw_sensor_data) < 1):
+#         print("ERROR at getFINALPOSANDVEC raw_sensor_data is too short")
+#         return
+#     elif(len(all_prev_pos) < 1):
+#         all_prev_pos = [(0,0)]
+
+#     if(not(-2 < -len(raw_sensor_data))):
+#         prev_distance = ((raw_sensor_data[-2]["left_motor"] + raw_sensor_data[-2]["right_motor"]) / 2) / 360 * (math.pi * wheel_dia)
+#     else:
+#         prev_distance = 0
+
+#     distance = ((raw_sensor_data[-1]["left_motor"] + raw_sensor_data[-1]["right_motor"]) / 2) / 360 * (math.pi * wheel_dia)
+
+#     #convert this into a position with the angle
+#     x_dir_vec = math.cos(math.radians(raw_sensor_data[-1]["any_gyroscope"]))
+#     y_dir_vec = math.sin(math.radians(raw_sensor_data[-1]["any_gyroscope"]))
+    
+#     x_pos, y_pos = (x_dir_vec * (distance - prev_distance), y_dir_vec * (distance - prev_distance))
+
+#     prev_x_pos, prev_y_pos = all_prev_pos[-1]
+#     final_pos = (x_pos + prev_x_pos, y_pos + prev_y_pos)
+    
+#     final_dir_vec = (x_dir_vec, y_dir_vec)
+
+#     return final_pos, final_dir_vec
+
+# print("testing")
+
+# test = [{"left_motor": 0, "right_motor": 0, "any_gyroscope": 90}, {"left_motor": 360, "right_motor": 360, "any_gyroscope": 90}, {"left_motor": 720, "right_motor": 720, "any_gyroscope": 0}, {"left_motor": 1080, "right_motor": 1080, "any_gyroscope": -90}, {"left_motor": 1440, "right_motor": 1440, "any_gyroscope": -180}]
+# pos = [(0,0)]
+# for i, item in enumerate(test):
+#     p, v = getFinalPosAndVec(test[0:i+1], pos)
+#     print(p, v)
+#     pos.append(p)
 
 
 # test_sensors = [test[0]]

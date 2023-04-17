@@ -1,13 +1,28 @@
 import math
+from constants import *
 from actions import *
 from helpers import *
 from inputs import *
+
+def preventOverCenter(req_turn_angle, curr_raw_dir, ideal_dir_vec, center_thresh = CENTER_THRESH):
+    x, y = ideal_dir_vec
+    ideal_angle = math.atan2(y, x)
+
+    #check if the requested turn angle combined with the robots current direction goes beyond the thresh from the ideal
+
+    if req_turn_angle + curr_raw_dir - ideal_angle > center_thresh:
+        turn_angle = center_thresh
+    else:
+        turn_angle = req_turn_angle
+
+    return turn_angle
 
 ##NOTE As u center the front sensor will not be facing where it wants to be, nor will any of the sensors
 ##should only run this while moving in a hallway, does not work well with extereme values for ultra corresponding
 # to junctions
 #curr_raw_dir is the raw gyro reading, and dir_vec is the direction the robot should be facing 
 #note sensor, should just be the current sensor reading in {} not [{}]
+#this should never exceed 45 degrees or 40 degrees away from the center line
 def center(sensor, curr_raw_dir, ideal_dir_vec):
     #centered
     centered = False
@@ -54,7 +69,10 @@ def center(sensor, curr_raw_dir, ideal_dir_vec):
         turn_angle = round(output + kp*sensor_diff)
 
     # Use the turn angle to adjust the robot's trajectory
-    #print(turn_angle)
+    
+    #the robot should never deviate more than CENTER_THRESH FROM THE ideal dir_vec
+    turn_angle = preventOverCenter(turn_angle, curr_raw_dir, ideal_dir_vec)
+
     if(turn_angle != 0):
         turnMade = True
         turn(turn_angle)
@@ -62,8 +80,92 @@ def center(sensor, curr_raw_dir, ideal_dir_vec):
     # return if the robot is centered
     return centered, turnMade
 
+#assume no 3 way junctions, any 3 way is an exit
+def checkSenarios(all_sensors_data, ultra_thresh = ULTRA_THRESH):
 
-# def createJuncItem(all_sens, ):
+    is_junc = False
+    is_deadend = False #special type of junction
+    is_exit = False #special type of junction
+    is_hallway = False #not a junction
+
+    #get the current sensor reading
+    curr_sensors = all_sensors_data[-1] #{of all sensors}
+
+    #get if front, left and right are seeing open space, True = seeing open space
+    front = True if curr_sensors["front_ultrasonic"] > ultra_thresh else False
+    right = True if curr_sensors["right_ultrasonic"] > ultra_thresh else False
+    left  = True if curr_sensors["left_ultrasonic" ] > ultra_thresh else False
+
+    if front and right and left:
+        #exit = all sensor are seeing open space
+        is_exit = True
+
+    elif not(front or right or left):
+        #deadend = no sensor is seeing open space
+        is_deadend = True
+    
+    elif front and not(right or left):
+        #hallway = only when the front sensor is seeing open space
+        is_hallway = True
+    
+    elif right or left:
+        #junc = at lease the left or right sensor is seeing open space, could be more 
+        is_junc = True
+
+    if not(is_hallway):
+        stop()
+
+    return is_junc, is_deadend, is_exit, is_hallway
+
+
+
+def addJuncItem(id, final_pos, is_expl, dir_vec, is_back, junc_items):
+    junc_item = {"id": id, "is_expl": is_expl, "pos": final_pos, "dir_vec": dir_vec, "is_back": is_back}
+    junc_items.append(junc_item)
+
+
+#raw_sensor_data = [{all items}]
+#if junc_items has no items then we are adding the entrance
+def createJunc(all_sensors_data, all_pos, ideal_dir_vec, junc_items, ultra_thresh = ULTRA_THRESH):
+
+    final_pos, not_used_real_dir_vec = getFinalPosAndVec(all_sensors_data, all_pos)
+    id = None
+
+    #id is 1 for first item, and +1 to last id for any other
+    #note id is used to group multiple junctions, so multiple juncs share an id
+    if len(junc_items) == 0:
+        id = 1
+    else:
+        id = junc_items[-1]["id"] + 1
+    
+    #is_explored is only true if the item is the entrance, ie first item
+    if id == 1:
+        is_expl = True
+    else:
+        is_expl = False
+
+    #find all other direction vectors for the given ideal_dir_vec
+    directions = getDirectionVectors(ideal_dir_vec) #{"front": (x,y), "right": ,  "left": , "back": }
+
+    #create the junction for any ultrasonic not seeing a wall
+    for name, val  in all_sensors_data[-1].items():
+        loc = getLoc(name)
+        type = getType(name)
+
+        if type == "ultrasonic":
+            if val > ultra_thresh:
+                is_back = False
+                addJuncItem(id, final_pos, is_expl, directions[loc], is_back, junc_items)
+
+    #create the back junction
+    is_back = True 
+
+    #the back component for the second junction is already explored so as to not go back into the entrance
+    if id == 2:
+        is_expl = True
+
+    addJuncItem(id, final_pos, is_expl, directions["back"], is_back, junc_items)
+    
 
 
 

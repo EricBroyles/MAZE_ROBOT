@@ -1,6 +1,6 @@
 import time
 from constants import *
-from helpers import getType
+from helpers import getLocType
 from actions import turn
 
 #waits for a LEGO sensor to be configured
@@ -29,7 +29,7 @@ def loadSensor(port):
 def configRobot():
     
     for item in ROBOT:
-        type = getType(item)
+        loc, type = getLocType(item)
 
         if(type == "motor"):
             LEGO.reset_motor_encoder(item["port"])
@@ -49,9 +49,9 @@ def configRobot():
     print("@config: COMPLETE CONFIG")
 
 def orientToYAxis():
-    ans = input("CHECK: DID I PLACE THE ROBOT FACING THE X-AXIS (y/n)")
+    ans = input("CHECK: DID I PLACE THE ROBOT FACING THE X-AXIS (y/n) ")
     if(ans != "y"):
         input("PLEASE HIT ctrl-c to restart")
     else:
         turn(90)
-    print("ROBOT IS FACING THE y-axis" )
+    print("ROBOT IS FACING THE y-axis")

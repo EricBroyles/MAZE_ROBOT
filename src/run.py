@@ -5,48 +5,6 @@ from actions import *
 from helpers import *
 from nav import *
 
-
-def addJuncItem(id, final_pos, is_expl, dir_vec, is_back, junc_items):
-    junc_item = {"id": id, "is_expl": is_expl, "pos": final_pos, "dir_vec": dir_vec, "is_back": is_back}
-    junc_items.append(junc_item)
-
-
-#raw_sensor_data = [{all items}]
-#if junc_items has no items then we are adding the entrance
-def createJunc(curr_dir_vec, raw_sensor_data, junc_items):
-    final_pos, dir_vec = getFinalPosAndVec(raw_sensor_data)
-    id = None
-    if len(junc_items) == 0:
-        id = 1
-    else:
-        id = junc_items[-1]["id"] + 1
-    
-    if id == 1:
-        is_expl = True
-    else:
-        is_expl = False
-
-    curr_sensor = raw_sensor_data[-1]
-    directions = getDirectionVectors(curr_dir_vec)
-
-    #create the junction for any ultrasonic not seeing a wall
-    for name, val  in curr_sensor.items():
-        loc = getLoc(name)
-        type = getType(name)
-
-        
-        if type == "ultrasonic":
-            if val > ULTRA_THRESH:
-                addJuncItem(id, final_pos, is_expl, dir_vec[loc], False, junc_items)
-
-    #create the back junction 
-    #the back component for the second junction is already explored so as to not go back into the entrance
-    if id == 2:
-        is_expl = True
-    addJuncItem(id, final_pos, is_expl, dir_vec["back"], True, junc_items)
-
-
-
 ##CONFIG
 configRobot()
 orientToYAxis()
@@ -54,6 +12,7 @@ orientToYAxis()
 all_pos = [(0,0)]
 all_sensors_data = []
 ideal_dir_vec = (0, 1) #the y-axis
+junc_items = []
 
 try:
     found_exit = False
@@ -82,10 +41,16 @@ try:
 
 
         #check senario -> junction, dead end, exit, stop the robot if these senarios are encountered
+        is_junc, is_deadend, is_exit, is_hallway = checkSenarios(all_sensors_data)
 
-        #if junction create a junction
+        if not(is_hallway):
+            #create a junction when it is not the hallway
+            createJunc(all_sensors_data, all_pos, ideal_dir_vec, junc_items) #adds the item to junc_items
 
         #if exit is found then break
+        if is_exit:
+            stop() #just in case
+            break
 
         #if dead end -> run navigate back, quick thing to follow the back arrow to find a new junc with unexplored items
 
@@ -93,7 +58,6 @@ try:
 
 
         #when to resume movement??????????????????????????????????????????????
-        #when are the encoders being reset to understand the position?????????????????????
 
 
         pass
