@@ -6,9 +6,12 @@ def addJuncItem(id, final_pos, is_expl, dir_vec, is_back, junc_items):
     junc_item = {"id": id, "is_expl": is_expl, "pos": final_pos, "dir_vec": dir_vec, "is_back": is_back}
     junc_items.append(junc_item)
 
-##change these to X_JUNC_THRESH, Y_JUNC_THRESH
 def juncExist(junc_pos, junc_items, x_thresh = X_JUNC_THRESH, y_thresh = Y_JUNC_THRESH):
 
+    """
+    
+    returns junc_exists and the id of the junc or None when no junc
+    """
     x, y = junc_pos
     x_min, x_max = (x - x_thresh / 2, x + x_thresh / 2)
     y_min, y_max = (y - y_thresh / 2, y + y_thresh / 2)
@@ -19,6 +22,7 @@ def juncExist(junc_pos, junc_items, x_thresh = X_JUNC_THRESH, y_thresh = Y_JUNC_
             if t_y >= y_min and t_y <= y_max:
                 #the junction already exists
                 return True, item['id']
+            
     #the junc does not already exist   
     return False, None
 
@@ -28,11 +32,18 @@ def juncExist(junc_pos, junc_items, x_thresh = X_JUNC_THRESH, y_thresh = Y_JUNC_
 ##assmues that the logic for a junction has been met!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 def createJunc(sensors_data, junc_pos, ideal_dir_vec, junc_items, space_ultra_thresh = SPACE_ULTRA_THRESH):
+
+    """
+
+    returns the id of the junc created, if not junc created then returns the id of the junction that already exists -> when the junc already exists
+    """
     id = None
+    is_expl = False
 
     #does the junction already exit, if so dont make the same junc again
     junc_exist, exist_id = juncExist(junc_pos, junc_items)
     if junc_exist:
+        print("the junc exists so leaving")
         return exist_id
     
     #id is 1 for first item, and +1 to last id for any other
@@ -51,7 +62,7 @@ def createJunc(sensors_data, junc_pos, ideal_dir_vec, junc_items, space_ultra_th
         if type == "ultrasonic":
             if val > space_ultra_thresh:
                 is_back = False
-                is_expl = False
+                
                 addJuncItem(id, junc_pos, is_expl, directions[loc], is_back, junc_items)
 
     #create the back junction
@@ -62,4 +73,6 @@ def createJunc(sensors_data, junc_pos, ideal_dir_vec, junc_items, space_ultra_th
         is_expl = True
     addJuncItem(id, junc_pos, is_expl, directions["back"], is_back, junc_items)
 
-    return id, junc_exist
+    print("made it through the junc no problem ???")
+    
+    return id

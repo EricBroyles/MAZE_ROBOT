@@ -1,3 +1,19 @@
+"""
+
+IMPROVEMENTS:
+use algebra to solve for the 6 data pts used in regression, instead of using the generated vals for wheel_dia
+robtot_pos - real_pos = 0 -> robot_pos = [math to convert encoder to distance] * wheel_dia = real_pos
+"""
+
+
+
+
+
+
+
+
+
+
 import math
 import os
 import csv
@@ -195,6 +211,8 @@ def graphMinCSVData(filename):
     print("y = ", log_fit[0], "log(x) + ", log_fit[1])
 
     log_fit2 = np.polyfit(np.log(x), y, 2)
+    print("log_fit2: ", log_fit2)
+    print("y = ", log_fit2[0], "(log(x))^2 + ", log_fit2[1], "log(x) + ", log_fit2[2])
 
     poly_fit_1 = np.polyfit(x, y, 1)
     print("poly_fit_1: ", poly_fit_1)

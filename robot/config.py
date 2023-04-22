@@ -34,6 +34,10 @@ def configRobot():
         if(type == "motor"):
             LEGO.reset_motor_encoder(item["port"])
             print(f"[ Pre: @config ] {item['name']} reset to 0 -> {LEGO.get_motor_encoder(item['port'])}")
+        
+        elif(type == "gate"):
+            LEGO.reset_motor_encoder(item["port"])
+            print(f"[ Pre: @config ] {item['name']} reset to 0 -> {LEGO.get_motor_encoder(item['port'])}")
 
         elif(type == "gyroscope"):
             LEGO.set_sensor_type(item['port'], item['sensor_type'])

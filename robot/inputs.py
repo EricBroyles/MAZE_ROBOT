@@ -39,6 +39,8 @@ def read(type = None, items = ROBOT):
 
             if typeItem == "motor":
                 reading = LEGO.get_motor_encoder(item["port"])
+            elif typeItem == "gate":
+                reading = LEGO.get_motor_encoder(item["port"])
             elif typeItem == "gyroscope":
                 reading = LEGO.get_sensor(item["port"])
             elif typeItem == "ultrasonic":
@@ -59,7 +61,9 @@ def read(type = None, items = ROBOT):
 
 
 def fastRead(type, items = ROBOT):
-
+    """
+    no cleaning is performed!!!!!
+    """
     reading = {}
 
     for item in items:

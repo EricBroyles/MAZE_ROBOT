@@ -41,58 +41,90 @@ def checkSenarios(curr_sensors, space_thresh = SPACE_ULTRA_THRESH, contact_thres
 
     return is_junc, is_deadend, is_exit, is_hallway
 
-#assumes the motor encoders only increase in position
-def getFinalPosAndVec(all_sensors_data, all_prev_pos, wheel_dia = WHEEL_DIA):
-
-    #error handling
-    if(len(all_sensors_data) < 1):
-        all_sensors_data.append(all_sensors_data[-1])
-        
-    elif(len(all_prev_pos) < 1):
-        all_prev_pos = [(0,0)]
-
-    if(not(-2 < -len(all_sensors_data))):
-        prev_distance = abs((all_sensors_data[-2]["left_motor"] + all_sensors_data[-2]["right_motor"]) / 2) / 360 * (math.pi * wheel_dia)
-    else:
-        prev_distance = 0
-
-    distance = abs((all_sensors_data[-1]["left_motor"] + all_sensors_data[-1]["right_motor"]) / 2) / 360 * (math.pi * wheel_dia)
-
-    #convert this into a position with the angle
-    x_dir_vec = math.cos(math.radians(all_sensors_data[-1]["any_gyroscope"]))
-    y_dir_vec = math.sin(math.radians(all_sensors_data[-1]["any_gyroscope"]))
-    
-    x_pos, y_pos = (x_dir_vec * (distance - prev_distance), y_dir_vec * (distance - prev_distance))
-
-    prev_x_pos, prev_y_pos = all_prev_pos[-1]
-    final_pos = (x_pos + prev_x_pos, y_pos + prev_y_pos)
-    
-    final_dir_vec = (x_dir_vec, y_dir_vec)
-
-    return final_pos, final_dir_vec
 
 
-def choosePath(junc_id, junc_items):
+def choosePath(ideal_dir_vec, junc_id, junc_items):
+
+    """
+    @junc_id == none give an arror
+    when a path is choosen then is_expl is updated
+    """
+
+
+    if(junc_id is None):
+        print("@choose path -> junc id is none")
 
     new_ideal_dir_vec = None #return none when there are no junctions available that have not been explored or back
+    right_options = (None, None)
+    left_options = (None, None)
     back_option = (None, None) #(index, {junction}) junction
+
+    directions = getDirectionVectors(ideal_dir_vec)
     
     for i, item in enumerate(junc_items):
         if item['id'] == junc_id and not(item['is_expl']):
 
             if not(item['is_back']):
-                new_ideal_dir_vec = item['dir_vec']
-                junc_items[i]['is_expl'] = True
-                return new_ideal_dir_vec
+                if item['dir_vec'] == ideal_dir_vec:
+                    new_ideal_dir_vec = item['dir_vec']
+                    junc_items[i]['is_expl'] = True
+                    return new_ideal_dir_vec
+                elif item['dir_vec'] == directions['right']:
+                    right_options = (i, item)
+                    
+                else:
+                    left_options = (i, item)
+                    
             else:
                 back_option = i, item
+                
+    ir, right_junc = right_options
+    il, left_junc = left_options
+    ib, back_junc = back_option
 
-    i, back_junc = back_option
-    if back_junc is not None:
-        junc_items[i]['is_expl'] = True
+    if right_junc is not None:
+        junc_items[ir]['is_expl'] = True
+        return right_junc['dir_vec']
+    elif left_junc is not None:
+        junc_items[il]['is_expl'] = True
+        return left_junc['dir_vec']
+    elif back_junc is not None:
+        junc_items[ib]['is_expl'] = True
         return back_junc['dir_vec']
 
     return new_ideal_dir_vec
+
+
+# def choosePath(ideal_dir_vec, junc_id, junc_items):
+
+#     """
+#     @junc_id == none give an arror
+#     when a path is choosen then is_expl is updated
+#     """
+
+
+#     if(junc_id is None):
+#         print("@choose path -> junc id is none")
+
+#     new_ideal_dir_vec = None #return none when there are no junctions available that have not been explored or back
+#     back_option = (None, None) #(index, {junction}) junction
+    
+#     for i, item in enumerate(junc_items):
+#         if item['id'] == junc_id and not(item['is_expl']):
+
+#             if not(item['is_back']):
+#                 new_ideal_dir_vec = item['dir_vec']
+#                 junc_items[i]['is_expl'] = True
+#                 return new_ideal_dir_vec
+#             else:
+#                 back_option = i, item
+
+#     i, back_junc = back_option
+#     if back_junc is not None:
+#         junc_items[i]['is_expl'] = True
+#         return back_junc['dir_vec']
+
+#     return new_ideal_dir_vec
 
 
 

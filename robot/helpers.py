@@ -1,4 +1,5 @@
-from constants import ROBOT
+import numpy as np
+from constants import ROBOT, NORM_ENCODERS_FUNC
 
 def getLocType(item, method = "item"):
     """
@@ -18,7 +19,6 @@ def getLocType(item, method = "item"):
     loc, type = split[0], split[-1]
     return loc, type
 
-
 def getItemByName(name, arrayDicts = ROBOT):
     """
     Returns the dictionary in array_of_dicts that has a "name" key with the value of name.
@@ -30,3 +30,15 @@ def getItemByName(name, arrayDicts = ROBOT):
         
     print(f"ERROR @getItemBYNAME: no item of name: {name} found")
     return None
+
+# return the wheel_dia that reduces the error for the encoders based on the data collected from experiment
+#NOTE this takes in the encoder value difference from a start stop sequence, will not normalize correctly if just passed the current encoder readings
+def normEncodersFunc(encoder_ticks, func = NORM_ENCODERS_FUNC):
+
+    func_output = 0
+    for i, coef in enumerate(func):
+        func_output += coef * np.log(encoder_ticks)**(len(func) - (i+1))
+
+    return func_output
+
+
