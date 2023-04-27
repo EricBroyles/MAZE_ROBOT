@@ -20,8 +20,20 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from numpy.polynomial import polynomial as P
+from mpl_toolkits.mplot3d import Axes3D
 print("comment actions out if not running on pi")
-from actions import *
+#from actions import *
+
+title_font = {
+        'family': 'normal',
+        'weight': 'bold',
+        'size': 20,
+    }
+
+label_font = {
+    'family': 'normal',
+    'size': 16,
+}
 
 #run experiments to collect data to be normalized
 def runTrialItem(num_ticks):
@@ -145,12 +157,13 @@ def graphCSVData(filename):
     ax = plt.axes(projection='3d')
     X, Y = np.meshgrid(x, y)
     ax.scatter3D(X, Y, z)
-    #ax.contour3D(X, Y, Z, 50, cmap='binary')
+    # #ax.contour3D(X, Y, Z, 50, cmap='binary')
 
-    ax.set_xlabel("encoder ticks")
-    ax.set_ylabel("wheel dia")
-    ax.set_zlabel("error")
-    ax.set_title(filename)
+
+    ax.set_xlabel("Distance (Encoder Ticks)", fontdict=label_font)
+    ax.set_ylabel("Wheel Diameter (m)", fontdict=label_font)
+    ax.set_zlabel("Error", fontdict=label_font)
+    ax.set_title("Error Accumulation For Distance vs Wheel Diameter", fontdict=title_font)
 
     plt.show()
 
@@ -250,11 +263,11 @@ def graphMinCSVData(filename):
     ax.plot(x_hat, poly1_y_hat, '-.', color = 'red', label = 'linear')
     
     ax.plot()
-    ax.set_xlabel('Encoder Ticks')
-    ax.set_ylabel('Test Wheel Diameter')
-    ax.set_title(f'Finding ideal values for wheel dia vs encoder ticks for {filename}')
+    ax.set_xlabel('Distance (Encoder Ticks)', fontdict=label_font)
+    ax.set_ylabel('Wheel Diameter (m)', fontdict=label_font)
+    ax.set_title(f'Model to Reduce Error as a Function of Distance', fontdict=title_font)
 
-    plt.legend(loc='upper right')
+    plt.legend(loc='upper right', prop={'size': 16})
     plt.gca().get_legend().legendHandles[0]
     plt.gca().get_legend().legendHandles[1]
     plt.gca().get_legend().legendHandles[2]

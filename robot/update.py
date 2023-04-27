@@ -69,6 +69,36 @@ def updatePos(all_raw_pos, all_prev_pos, do_norm_encoders = False, wheel_dia = W
 
     return final_dir_vec
 
+def updateHazards(curr_sensors, curr_pos, hazards, hazard_params, magnet_thresh = MAGNET_THRESH, ir_thresh = IR_THRESH):
+    name = None
+    reading = None
+    if getMag(curr_sensors['front_magnet']) >= magnet_thresh or abs(curr_sensors['front_magnet']['y']):
+
+        name = "magnet"
+        reading = getMag(curr_sensors['front_magnet'])
+    elif curr_sensors['front_ir'] >= ir_thresh:
+        name = "heat"
+        reading = curr_sensors['front_ir']
+    else:
+        return
+    
+    x, y = curr_pos
+    id = len(hazards) + 1
+    # haz_already_exist = False
+
+    # for n, pos in hazards.items():
+    #     x_t, y_t = pos
+
+    #     if abs(x - x_t) < .40 and abs(y-y_t) < .40 and (n[:4] == name[:4]):
+    #         haz_already_exist = True
+    #         break
+
+    # if not haz_already_exist:
+    if name is not None and reading is not None:
+        hazards[name + str(id)] = curr_pos
+        hazard_params[name + str(id)] = reading
+
+
 
 # #assumes the motor encoders only increase in position
 # #assumes that each item in all_sensors_data represents a start stop sequence of the motor

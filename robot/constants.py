@@ -1,5 +1,6 @@
 import lib.brickpi3 as bp
 import lib.grovepi as grove
+from lib.MPU9250 import MPU9250
 
 ##CONSTANTS
 #Coordinate System
@@ -51,7 +52,7 @@ NUM_DATA_PTS = SENSOR_READ_TIME / DELAY
 LESS_DATA_PTS = round(NUM_DATA_PTS / 2)
 
 #all items to have data proccessed the same way
-MEDIAN_CLEAN = ["motor", "gyroscope", "ultrasonic", "gate"]
+MEDIAN_CLEAN = ["motor", "gyroscope", "ultrasonic", "ir", 'magnet', 'gate']
 
 TIME_TO_TURN_90 = 2.5 #s changes with dps
 BEGIN_READING_AFTER = .75 #75% of the turn time is complete
@@ -65,6 +66,10 @@ CONTACT_ULTRA_THRESH = 10 #about to come into contact with a wall
 CENTER_THRESH = 40 #the abs of the degree that the robot couold at most turn away from the ideal orientation
 X_JUNC_THRESH = .40#cm, the size of a hallwaythe area for a junction
 Y_JUNC_THRESH = .40 #the size of a hallway and the area for a junction
+MAGNET_THRESH = 300
+IR_THRESH = 45
+COLLISION_THRESH = 5
+FRONT_MAGNET_THRESH = 80
 
 NORM_ENCODERS_FUNC = [.00019697421409753857, -0.003258823003701462, .06827101159378236] #0.00019697421409753857 (log(x))^2 +  -0.003258823003701462 log(x) +  0.06827101159378236
 
@@ -77,6 +82,10 @@ LEGO = bp.BrickPi3()
 
 ##BRICKPI INSTANCE
 BP = bp
+
+##MPU9250 INSTANCE
+MPU = MPU9250()
+
 
 ##ROBOT STRUCT
 """
@@ -96,5 +105,9 @@ ROBOT = [
     {"name": "left_ultrasonic", "port": 3},
     {"name": "front_ultrasonic", "port": 4},
     {"name": "right_ultrasonic", "port": 7},
+    {"name": "front_magnet", "port": None}, #no port specified here does need specific imu port
+    {"name": "front_ir", "port": 1, "pin_mode": "INPUT"}
+
 ]
+
 

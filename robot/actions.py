@@ -98,27 +98,6 @@ def move(distance):
     
     stop()
 
-def reverse(distance):
-
-    distance = abs(distance)
-
-    motor_reading = read("motor") #get the most accurate reading
-    (left_motor, right_motor) = (motor_reading["left_motor"], motor_reading["right_motor"])
-    final_encoder_val = -360 * (abs(distance) / (pi * WHEEL_DIA)) + (abs(right_motor) + abs(left_motor)) / 2
-
-    startMove(-SLOW_LEFT_MOVE_DPS, -SLOW_RIGHT_MOVE_DPS)
-
-    while((abs(right_motor) + abs(left_motor)) / 2 >= final_encoder_val):
-        #time.sleep(DELAY)
-        motor_reading = fastRead("motor")
-        (left_motor, right_motor) = (motor_reading["left_motor"], motor_reading["right_motor"])
-
-    print(f"@move: complete -> (left: ", read("motor")["left_motor"], ", right: " , read("motor")["right_motor"], ")")
-
-    #print("@MOVE: DONE MOVE -> LEFT: ", read("motor")["left_motor"]  , " RIGHT: ", read("motor")["right_motor"], " vs: ", final_encoder_val )
-    
-    stop()
-
 #only is entered once a junction is detected
 #continue moving forward until the ultrasonic pointing in the direction of the junc begins to decrease
 #or until the front sensor gets close to a wall
@@ -139,7 +118,10 @@ def centerInJunc(contact_thresh = CONTACT_ULTRA_THRESH, space_thresh = SPACE_ULT
     prev_left = sensors["left_ultrasonic"]
     prev_right = sensors["right_ultrasonic"]
 
-    contact_front = True if sensors["front_ultrasonic"] <= contact_thresh else False
+    hazard_front = True if abs(sensors['front_magnet']['y']) >= FRONT_MAGNET_THRESH or sensors['front_ir'] >= IR_THRESH else False
+    contact_front = True if sensors["front_ultrasonic"] <= contact_thresh or hazard_front else False
+    print("@center", hazard_front)
+
 
     curr_left = prev_left
     curr_right = prev_right
@@ -152,7 +134,7 @@ def centerInJunc(contact_thresh = CONTACT_ULTRA_THRESH, space_thresh = SPACE_ULT
 
     while not edge_junc_found:
 
-        sensors = fastRead("ultrasonic")
+        sensors = read()
         curr_front = sensors["front_ultrasonic"]
         curr_left = sensors["left_ultrasonic"]
         curr_right = sensors["right_ultrasonic"]
@@ -168,8 +150,10 @@ def centerInJunc(contact_thresh = CONTACT_ULTRA_THRESH, space_thresh = SPACE_ULT
         space_right = True if curr_right > space_thresh else False
 
         is_exit = True if space_front and space_left and space_right else False
+        hazard_front = True if abs(sensors['front_magnet']['y']) >= FRONT_MAGNET_THRESH or sensors['front_ir'] >= IR_THRESH else False
+        print("@center", hazard_front)
 
-        contact_front = True if sensors["front_ultrasonic"] <= contact_thresh else False
+        contact_front = True if sensors["front_ultrasonic"] <= contact_thresh or hazard_front else False
 
         edge_junc_found = True if not (space_left or space_right) else False
 
@@ -192,243 +176,46 @@ def centerInJunc(contact_thresh = CONTACT_ULTRA_THRESH, space_thresh = SPACE_ULT
         curr_right_motor = sensors["right_motor"]
 
         center_target_delta = ((curr_left_motor + curr_right_motor) / 2 - (prev_left_motor + prev_right_motor) / 2) / 2
-        center_targer_encoder =  (prev_left_motor + prev_right_motor) / 2 + center_target_delta
+        center_target_encoder =  (prev_left_motor + prev_right_motor) / 2 + center_target_delta
 
         startMove(-SLOW_LEFT_MOVE_DPS, -SLOW_RIGHT_MOVE_DPS)
 
-        while (curr_right_motor + curr_left_motor) / 2 < center_targer_encoder:
+        while (curr_right_motor + curr_left_motor) / 2 <= center_target_encoder:
             sensors = read("motor")
             curr_left_motor = sensors["left_motor"]
             curr_right_motor = sensors["right_motor"]
         
 
-    print("PAUSING FOR JUNCTION CENTER COMPLETE")
-    pause()
+    # print("PAUSING FOR JUNCTION CENTER COMPLETE")
+    # pause()
 
     print("+++++++++++++++++++++++++++++++++++++++++++++\n")
 
     return is_exit 
 
+def checkExit():
+    print("@checkExit")
+    sensors = read("motor")
+    prev_left_motor = sensors["left_motor"]
+    prev_right_motor = sensors["right_motor"]
+    move(.40)
+    is_junc, is_deadend, is_exit, is_hallway, is_hazard, is_collision, hazard_front = checkSenarios(read())
+    if not is_exit:
+        print("PAY ATTENTION!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Reverseing")
+        sensors = read("motor")
+        curr_left_motor = sensors["left_motor"]
+        curr_right_motor = sensors["right_motor"]
 
+        startMove(-SLOW_LEFT_MOVE_DPS, -SLOW_RIGHT_MOVE_DPS)
 
-# def centerInJunc(contact_thresh = CONTACT_ULTRA_THRESH, space_thresh = SPACE_ULTRA_THRESH, wide_open_thresh = WIDE_OPEN_ULTRA_THRESH):
+        while (curr_right_motor + curr_left_motor) / 2 <= (prev_left_motor + prev_right_motor) / 2:
+            sensors = read("motor")
+            curr_left_motor = sensors["left_motor"]
+            curr_right_motor = sensors["right_motor"]
 
-#     print("\n+++++++++++++++++++++++++++++++++++++++++++++")
-#     print("Begin to center")
-
-#     is_exit = False
-#     num_wide_open_spikes = 0
-#     edge_junc_found = False #become true when 20 < ultra_diff < wide_open_ultra
-
-#     sensors = read()
-#     prev_left_motor = sensors["left_motor"]
-#     prev_right_motor = sensors["right_motor"]
-#     prev_left = sensors["left_ultrasonic"]
-#     prev_right = sensors["right_ultrasonic"]
-
-#     contact_front = True if sensors["front_ultrasonic"] <= contact_thresh else False
-
-#     curr_left = prev_left
-#     curr_right = prev_right
-
-#     startMove(SLOW_LEFT_MOVE_DPS, SLOW_RIGHT_MOVE_DPS)
-
-
-
-#     #if at any point an exit or a wall in front is encountered then done
-#     #if 3 large spikes of magnitdue greater or equal to wide_open_thresh are encountered then, the second one is the center, no reverse needed
-#     #if first negetive spike is greater than 20 but less than wide_open, you have found the edge of the junction area, reverse for half the distance traveled to be in the center
-
-#     while num_wide_open_spikes < 2:
-
-#         sensors = fastRead("ultrasonic")
-#         curr_front = sensors["front_ultrasonic"]
-#         curr_left = sensors["left_ultrasonic"]
-#         curr_right = sensors["right_ultrasonic"]
-
-#         delta_left = curr_left - prev_left 
-#         delta_right = curr_right - prev_right
-
-#         print("@center: curr_left: ", curr_left, "prev_left: ", prev_left, "delta_left: ", delta_left)
-#         print("@center: curr_right: ", curr_right, "prev_right: ", prev_right, "delta_right: ", delta_right)
-
-#         space_front = True if curr_front > space_thresh else False
-#         space_left  = True if curr_left > space_thresh else False
-#         space_right = True if curr_right > space_thresh else False
-
-#         is_exit = True if space_front and space_left and space_right else False
-
-#         contact_front = True if sensors["front_ultrasonic"] <= contact_thresh else False
-
-#         #kill this if every detect a wall in front, or finds the exit
-#         if is_exit or contact_front:
-#             break
-
-#         #should be strictly negetive delta being considered
-#         if delta_left <= -20 and delta_left >= -wide_open_thresh or delta_right <= -20 and delta_right >= -wide_open_thresh:
-#             edge_junc_found = True
-#             break 
-
-#         if abs(delta_left) >= wide_open_thresh or abs(delta_right) >= wide_open_thresh:
-#             num_wide_open_spikes += 1
-
-#         print("num_wide_open_spikes", num_wide_open_spikes)
-
-#         prev_left = curr_left
-#         prev_right = curr_right
-
-#     stop()
-#     if not (is_exit or contact_front) and edge_junc_found:
-#         sensors = read("motor")
-#         curr_left_motor = sensors["left_motor"]
-#         curr_right_motor = sensors["right_motor"]
-
-#         center_target_delta = ((curr_left_motor + curr_right_motor) / 2 - (prev_left_motor + prev_right_motor) / 2) / 2
-#         center_targer_encoder =  (prev_left_motor + prev_right_motor) / 2 + center_target_delta
-
-#         startMove(-SLOW_LEFT_MOVE_DPS, -SLOW_RIGHT_MOVE_DPS)
-
-#         while (curr_right_motor + curr_left_motor) / 2 < center_targer_encoder:
-#             sensors = read("motor")
-#             curr_left_motor = sensors["left_motor"]
-#             curr_right_motor = sensors["right_motor"]
+    print("Done check exit and possibly a reverse")
         
-
-#     print("PAUSING FOR JUNCTION CENTER COMPLETE")
-#     pause()
-
-#     print("+++++++++++++++++++++++++++++++++++++++++++++\n")
-
-#     return is_exit 
-
-
-
-
-
-
-
-
-
-# def centerInJunc(contact_thresh = CONTACT_ULTRA_THRESH, space_thresh = SPACE_ULTRA_THRESH):
-
-#     print("\n+++++++++++++++++++++++++++++++++++++++++++++")
-#     print("Begin to center")
-
-#     graph_left = []
-#     graph_right = []
-#     graph_delta_left = [0]
-#     graph_delta_right = [0]
-
-#     is_exit = False
-#     num_spikes = 0
-
-#     sensors = read()
-#     prev_left_motor = sensors["left_motor"]
-#     prev_right_motor = sensors["right_motor"]
-#     prev_left = sensors["left_ultrasonic"]
-#     prev_right = sensors["right_ultrasonic"]
-
-#     contact_front = True if sensors["front_ultrasonic"] <= contact_thresh else False
-
-#     curr_left = prev_left
-#     curr_right = prev_right
-
-#     graph_left.append(curr_left)
-#     graph_right.append(curr_right)
-
-#     startMove(SLOW_LEFT_MOVE_DPS, SLOW_RIGHT_MOVE_DPS)
-
-#     while num_spikes <= 2:
-
-#         sensors = fastRead("ultrasonic")
-#         curr_front = sensors["front_ultrasonic"]
-#         curr_left = sensors["left_ultrasonic"]
-#         curr_right = sensors["right_ultrasonic"]
-
-#         graph_left.append(curr_left)
-#         graph_right.append(curr_right)
-#         graph_delta_left.append(curr_left - prev_left)
-#         graph_delta_right.append(curr_right - prev_right)
-
-
-
-#         print("@center: curr_left: ", curr_left, "prev_left: ", prev_left, "delta_left: ", curr_left - prev_left)
-#         print("@center: curr_right: ", curr_right, "prev_right: ", prev_right, "delta_right: ", curr_right - prev_right)
-
-#         space_front = True if curr_front > space_thresh else False
-#         space_left  = True if curr_left > space_thresh else False
-#         space_right = True if curr_right > space_thresh else False
-
-#         is_exit = True if space_front and space_left and space_right else False
-
-#         contact_front = True if sensors["front_ultrasonic"] <= contact_thresh else False
-
-#         #kill this if every detect a wall in front, or finds the exit
-#         if is_exit or contact_front:
-#             break
-
-#         if abs(curr_left - prev_left) >= 20 or abs(curr_right - prev_right) >= 20:
-#             num_spikes += 1
-
-#         print("num_spikes", num_spikes)
-
-#         prev_left = curr_left
-#         prev_right = curr_right
-
-#     stop()
-#     # if not (is_exit or contact_front):
-#     #     sensors = read("motor")
-#     #     curr_left_motor = sensors["left_motor"]
-#     #     curr_right_motor = sensors["right_motor"]
-
-#     #     center_target_delta = ((curr_left_motor + curr_right_motor) / 2 - (prev_left_motor + prev_right_motor) / 2) / 2
-#     #     center_targer_encoder =  (prev_left_motor + prev_right_motor) / 2 + center_target_delta
-
-#     #     startMove(-SLOW_LEFT_MOVE_DPS, -SLOW_RIGHT_MOVE_DPS)
-
-#     #     while (curr_right_motor + curr_left_motor) / 2 < center_targer_encoder:
-#     #         sensors = read("motor")
-#     #         curr_left_motor = sensors["left_motor"]
-#     #         curr_right_motor = sensors["right_motor"]
-        
-
-#     print("PAUSING FOR JUNCTION CENTER COMPLETE")
-#     pause()
-
-    
-
-
-
-#     x = list(range(1, len(graph_left) + 1))
-    
-
-#     # Create a figure and axis object
-#     fig, ax = plt.subplots()
-
-#     # Plot the first dataset (array of numbers)
-#     ax.plot(x, graph_left, label='left reading')
-#     ax.plot(x, graph_right, label='right reading')
-#     ax.plot(x, graph_delta_left, label='left delta reading')
-#     ax.plot(x, graph_delta_right, label='right delta reading')
-
-#     # Set axis labels and title
-#     ax.set_xlabel('X')
-#     ax.set_ylabel('value')
-#     ax.set_title('Centering in Junction Ultrasonic Readings')
-
-#     # Add a legend
-#     ax.legend()
-
-#     # Show the plot
-#     plt.show()
-
-#     print("+++++++++++++++++++++++++++++++++++++++++++++\n")
-
-
-#     return is_exit 
-
-
-
+    return is_exit
 
 def pause():
     stop()
@@ -446,7 +233,7 @@ def dump(dps = DUMP_DPS):
 
     print("@DUMP -> begining to dump make sure that it is not pushing the wrong way")
     print("@DUMP -> MAKE SURE NO WIRES ARE INTERFFERING")
-    pause()
+    # pause()
 
     item = getItemByName('back_gate')
 
@@ -471,5 +258,26 @@ def dump(dps = DUMP_DPS):
     gate_encoder = read("gate")
     while(abs(gate_encoder) < 85):
         gate_encoder = read("gate")
+
+#does not decide if a panic center is needed, only amends the issue
+def panicCenter(contact_thresh = CONTACT_ULTRA_THRESH):
+    reading = read("ultrasonic")
+    left_ultra = reading["left_ultrasonic"]
+    right_ultra = reading["right_ultrasonic"]
+
+    if left_ultra < right_ultra:
+        turn_amount = -90
+    elif left_ultra > right_ultra:
+        turn_amount = 90
+
+    turn(turn_amount)
+    #move until the robot sees contact in front and then stop and turn by 90
+    startMove(SLOW_LEFT_MOVE_DPS, SLOW_RIGHT_MOVE_DPS)
+    contact_front = True if reading["front_ultrasonic"] <= contact_thresh else False
+    while not contact_front:
+        reading = read("ultrasonic")
+        contact_front = True if reading["front_ultrasonic"] <= contact_thresh else False  
+    stop()
+    turn(-turn_amount)          
 
 

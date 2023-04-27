@@ -16,10 +16,6 @@ test = "hallway"
 
 try:
 
-    if test == "back":
-        move(.15)
-        reverse(.15)
-
     if test == "read_ultra":
         while(True):
             print(read("ultrasonic"))
@@ -37,6 +33,7 @@ try:
         found_exit = False
         junc_items = []
         all_pos = [(0,0)]
+        curr_junc_id = 1 #the starting junction id, note this is the id of junction the robot is at, not simply a increasing id num
 
         #will have all the dictionaries sensor items but only needs the 3 listed below
         all_raw_pos = [{"left_motor": 0 , "right_motor": 0, "any_gyroscope": read("gyroscope")}]#[{"left_motor":  , "right_motor"}] only gets updated with the current encoder readings after a start and stop sequence
@@ -44,7 +41,7 @@ try:
 
         #create the entrance junc
         all_sensors_data.append(read())
-        junc_id = createJunc(all_sensors_data[-1], all_pos[-1], ideal_dir_vec, junc_items)
+        curr_junc_id = createJunc(curr_junc_id, all_sensors_data[-1], all_pos[-1], ideal_dir_vec, junc_items)
         ans = input("NOTIFY: PERFORMING A DEFULAT MOVE ON CONFIG (y/n)")
         if ans == "y":
             move(.3) # == stop start
@@ -78,7 +75,7 @@ try:
                     real_dir_vec = updateAfterStartStop(all_sensors_data, all_raw_pos, all_pos, do_norm_encoders)
 
                 #create a junction when it is not the hallway, ie in a deadend, exit, or junc
-                junc_id = createJunc(all_sensors_data[-1], all_pos[-1], ideal_dir_vec, junc_items) #adds the item to junc_items
+                curr_junc_id = createJunc(curr_junc_id, all_sensors_data[-1], all_pos[-1], ideal_dir_vec, junc_items) #adds the item to junc_items
 
                 #found the exit so stop
                 if is_exit:
@@ -86,7 +83,7 @@ try:
                     break
 
                 #choose path to go down, this will set the explored and also set the new ideal dir vector
-                new_ideal_dir_vec = choosePath(ideal_dir_vec, junc_id, junc_items)
+                new_ideal_dir_vec = choosePath(ideal_dir_vec, curr_junc_id, junc_items)
                 ##^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                 #when this is none I have no places to go, and need to find another junction
                 #if no other junctions exist then an error has occured

@@ -1,7 +1,7 @@
 import time
 from constants import *
 from helpers import getLocType
-from actions import turn
+from actions import turn, resetEncoders
 
 #waits for a LEGO sensor to be configured
 #the lego instance, and the BP instance
@@ -47,8 +47,19 @@ def configRobot():
         elif(type == "ultrasonic"):
             print(f"[ Pre: @config ] {item['name']} reading valid -> {GROVE.ultrasonicRead(item['port'])}")
 
+        elif(type == "magnet"):
+            print(f"[ Pre: @config ] {item['name']} reading valid -> {MPU.readMagnet()}")
+
+        elif(type == "ir"):
+            try:
+                print(f"[ Pre: @config ] {item['name']} reading valid -> {GROVE.analogRead(item['port'])}")
+            except IOError as error:
+                print(error)
         else:
-            print(f"ERROR [ Pre: @config ] item type: {item['type']} does not match any know type")
+            try:
+                print(f"ERROR [ Pre: @config ] item type: {item['type']} does not match any know type")
+            except IOError as error:
+                print(error)
 
     print("@config: COMPLETE CONFIG")
 
@@ -58,4 +69,5 @@ def orientToYAxis():
         input("PLEASE HIT ctrl-c to restart")
     else:
         turn(90)
+    resetEncoders()
     print("ROBOT IS FACING THE y-axis")

@@ -25,7 +25,7 @@ try:
             mag_y = mag['y']
             mag_z = mag['z']
             magMagnitude = math.sqrt(mag_x**2 + mag_y**2 + mag_z**2)
-            print("Magnetic: ",magMagnitude)
+            print("Magnetic: ",mag)
            
             if(magMagnitude > magThreshold):
                 print("Magnet Detected")

@@ -42,3 +42,6 @@ def normEncodersFunc(encoder_ticks, func = NORM_ENCODERS_FUNC):
     return func_output
 
 
+def getMag(magnet_data):
+    return (magnet_data['x']**2 + magnet_data['y']**2 + magnet_data['z']**2)**.5
+

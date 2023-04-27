@@ -9,10 +9,27 @@ def clean(unclean):
 
     for item in copy_unclean:
         loc, typeItem = getLocType(item)
-        data = None
+        data = item["data"]
 
         if typeItem in MEDIAN_CLEAN:
-            data = np.median(item["data"])
+            if typeItem == "magnet":
+                #{x: , y: , z:}
+                x = []
+                y = []
+                z = []
+                for magnet in item["data"]: 
+                    for key, val in magnet.items():
+                        if key == "x":
+                            x.append(val)
+                        elif key == "y":
+                            y.append(val)
+                        elif key == "z":
+                            z.append(val)
+                    
+                    data = {"x": abs(np.average(x)), 'y': abs(np.average(y)), 'z': abs(np.average(z))}
+            else:
+                data = np.median(item["data"])
+        
 
         cleaned[item["name"]] = data
         
@@ -45,6 +62,10 @@ def read(type = None, items = ROBOT):
                 reading = LEGO.get_sensor(item["port"])
             elif typeItem == "ultrasonic":
                 reading = GROVE.ultrasonicRead(item["port"])
+            elif typeItem == "magnet":
+                reading = MPU.readMagnet()
+            elif typeItem == "ir":
+                reading = GROVE.analogRead(item["port"])
             
             item["data"].append(reading)
 
